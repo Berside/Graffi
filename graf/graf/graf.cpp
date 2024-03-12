@@ -1,129 +1,162 @@
 ﻿#include <iostream>
+#include <chrono>
+#include <iomanip>
 #include <fstream>
-#include <queue>
+#include <sstream>
+#include <vector>
+#include <map>
 #include <string>
-#include <ctime> // Добавьте эту библиотеку
 using namespace std;
-
+// Функция createTreeFromFile учитывает только название с одной буквой 
 struct Node {
-    int data;
+    char data;
     Node* left;
     Node* right;
-    Node* parent;
+    Node() : data('\0'), left(nullptr), right(nullptr) {}
+    Node(char data) : data(data), left(nullptr), right(nullptr) {}
 };
 
-Node* newNode(int data, Node* parent = nullptr) {
-    Node* newNode = new Node();
-    newNode->data = data;
-    newNode->left = newNode->right = nullptr;
-    newNode->parent = parent;
-    return newNode;
+Node* newNode(char data) {
+    Node* node = new Node;
+    node->data = data;
+    node->left = node->right = nullptr;
+    return node;
 }
 
-int RightCount(Node* root) {
-    if (root == nullptr) return 0;
+int countRightLeafNodes(Node* node) {
+    if (node == nullptr) return 0;
     int count = 0;
-    queue<Node*> q;
-    q.push(root);
-    while (!q.empty()) {
-        Node* current = q.front();
-        q.pop();
-
-        // Проверяем, является ли текущий узел листом и правым дочерним вершином
-        if (current->left == nullptr && current->right == nullptr && current->parent && current->parent->right == current) {
-            count++;
-        }
-            
-        if (current->left) q.push(current->left);
-        if (current->right) q.push(current->right);
+    if (node->right != nullptr and node->right->left == nullptr and node->right->right == nullptr) {
+        count += 1;
+        cout << "Найден правый листовой узел: " << node->right->data << endl;
     }
-    return count;
+    return count + countRightLeafNodes(node->left) + countRightLeafNodes(node->right);
 }
 
+void takeInput(Node*& node) {
+    char data;
+    cout << "Enter data for the node: ";
+    cin >> data;
+    node = newNode(data);
+    cout << "Do you want to add a left child? (y/n): ";
+    char choice;
+    cin >> choice;
+    if (choice == 'y' || choice == 'Y') {
+        takeInput(node->left);
+    }
+    cout << "Do you want to add a right child? (y/n): ";
+    cin >> choice;
+    if (choice == 'y' || choice == 'Y') {
+        takeInput(node->right);
+    }
+}
 
-Node* readTreeFromFile(const string& filename) {
+Node* InputBinaryTree() {
+    Node* root = nullptr;
+    takeInput(root);
+    return root;
+}
+
+void printTree(Node* node, int space) {
+    if (node == nullptr)
+        return;
+    space += 10;
+    printTree(node->right, space);
+    cout << endl;
+    for (int i = 10; i < space; i++)
+        cout << " ";
+    cout << node->data << "\n";
+    printTree(node->left, space);
+}
+
+Node* findNode(Node* root, char data) {
+    if (!root) return nullptr;
+    if (root->data == data) return root;
+    Node* left = findNode(root->left, data);
+    if (left) return left;
+    return findNode(root->right, data);
+}
+
+Node* createTreeFromFile(const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cerr << "Could not open file: " << filename << endl;
+        cerr << "Не удалось открыть файл " << filename << endl;
         return nullptr;
     }
-    queue<Node*> nodeQueue;
-    Node* root = nullptr;
-    string line;
-    int lineCount = 0;
-    while (getline(file, line)) {
-        lineCount++;
-        int data;
-        if (!(file >> data)) break;
-        Node* node = newNode(data);
 
-        if (lineCount == 1) {
-            root = node;
-            nodeQueue.push(root);
+    map<char, Node*> nodeMap;
+    char parent, child, separator;
+    Node* root = nullptr;
+    bool isFirstLine = true;
+    while (file >> parent >> separator >> child) {
+        if (separator != '-' && separator != '>') {
+            cerr << "Неверный формат данных в файле." << endl;
+            return nullptr;
         }
-        else {
-            if (nodeQueue.empty()) {
-                cerr << "Unexpected EOF" << endl;
+
+        // Добавляем узлы в nodeMap сразу после их создания
+        if (nodeMap.find(parent) == nodeMap.end()) {
+            nodeMap[parent] = newNode(parent);
+        }
+        if (nodeMap.find(child) == nodeMap.end()) {
+            nodeMap[child] = newNode(child);
+        }
+
+        // Связываем дочерний узел с родительским
+        if (separator == '-') {
+            if (nodeMap[parent]->left == nullptr) {
+                nodeMap[parent]->left = nodeMap[child];
+            }
+            else if (nodeMap[parent]->right == nullptr) {
+                nodeMap[parent]->right = nodeMap[child];
+            }
+            else {
+                cerr << "Ошибка: узел с данными " << parent << " имеет более двух потомков." << endl;
                 return nullptr;
             }
-            Node* parent = nodeQueue.front();
-            nodeQueue.pop();
-
-            int leftChildData, rightChildData;
-            file >> leftChildData >> rightChildData;
-
-            if (leftChildData != -1) {
-                node->left = newNode(leftChildData, node);
-                nodeQueue.push(node->left);
+        }
+        else if (separator == '>') {
+            if (nodeMap[parent]->right == nullptr) {
+                nodeMap[parent]->right = nodeMap[child];
             }
-            if (rightChildData != -1) {
-                node->right = newNode(rightChildData, node);
-                nodeQueue.push(node->right);
-            }
-
-            if (parent->left == nullptr) {
-                parent->left = node;
-            }
-            else if (parent->right == nullptr) {
-                parent->right = node;
+            else {
+                cerr << "Ошибка: узел с данными " << parent << " уже имеет правого потомка." << endl;
+                return nullptr;
             }
         }
+
+        // Если это первая строка файла, устанавливаем корневой узел
+        if (isFirstLine) {
+            root = nodeMap[parent];
+            isFirstLine = false;
+        }
     }
+
     return root;
 }
 
 
-void printTree(Node* node, int space = 0) {
-    if (node == nullptr) return;
-    printTree(node->right, space + 10);
-    cout << endl;
-    for (int i = 10; i < space; i++) {
-        cout << " ";
-    }
-    cout << node->data << "\n";
-    printTree(node->left, space + 10);
-}
-
 int main() {
     setlocale(LC_ALL, "Russian");
+    auto start = chrono::high_resolution_clock::now();
+    Node* root2 = createTreeFromFile("Module.txt");
+    int count2 = countRightLeafNodes(root2);
+    cout << "Count Right Leaf Nodes: " << count2 << endl << endl;
+    printTree(root2, 0);
+    Node* root = newNode('A');
+    root->left = newNode('B');
+    root->right = newNode('C');
+    root->left->left = newNode('D');
+    root->left->right = newNode('E');
+    root->right->right = newNode('F');
+    root->left->left->left = newNode('G');
+    root->left->left->right = newNode('H');
+    int count = countRightLeafNodes(root);
 
-    // Запоминаем время начала выполнения
-    clock_t start = clock();
-
-    Node* root = readTreeFromFile("Module.txt");
-    if (root == nullptr) {
-        cerr << "Не удалось прочитать дерево из файла." << endl;
-        return 1;
-    }
-    cout << "Бинарное дерево: " << endl;
-    printTree(root);
-    cout << "Count right leaves: " << RightCount(root) << endl;
-
-    // Вычисляем и выводим время выполнения
-    clock_t end = clock();
-    double duration = static_cast<double>(end - start) / CLOCKS_PER_SEC;
-    cout << "Время выполнения: " << duration << " секунд" << endl;
-
-    return 0;
+    auto end = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(end - start).count();
+    //cout << "Count Right Leaf Nodes: " << count << endl;
+    cout << "Execution time: " << duration << " microseconds" << endl;
+    //printTree(root, 0);
 }
 
