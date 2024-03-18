@@ -1,2 +1,3 @@
 ﻿  graf.cpp
+C:\Users\bersi\source\repos\graf\graf\graf.cpp(139,15): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
   graf.vcxproj -> C:\Users\bersi\source\repos\graf\x64\Debug\graf.exe
