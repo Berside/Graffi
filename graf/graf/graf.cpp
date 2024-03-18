@@ -1,7 +1,6 @@
 ﻿#include <iostream>
 #include <chrono>
 #include <fstream>
-#include <vector>
 #include <map>
 #include <random>
 #include <ctime>
@@ -88,39 +87,34 @@ Node* createTreeFromFile(const string& filename) {
     }
     return root;
 }
-void writeTreeToFile(Node* node, std::ofstream& file, std::string parent = "") {
-   if (node == nullptr) return;
-
-   std::string child = std::string(1, node->data);
-   if (!parent.empty()) {
-       file << parent << "-" << child << "\n";
-   }
-
-   writeTreeToFile(node->left, file, child);
-   writeTreeToFile(node->right, file, child);
+void writeTreeToFile(Node* node, ofstream& file, string parent = "") {
+    if (node == nullptr) return;
+    string child = string(1, node->data);
+    if (!parent.empty()) {
+        file << parent << "-" << child << "\n";
+    }
+    writeTreeToFile(node->left, file, child);
+    writeTreeToFile(node->right, file, child);
 }
 
 Node* generateRandomBinaryTree(int n) {
     if (n == 0) return nullptr;
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(48, 122);
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<> dis(48, 122);
     char data = static_cast<char>(dis(gen));
     Node* root = newNode(data);
     int leftN = rand() % n;
     int rightN = n - leftN - 1;
     root->left = generateRandomBinaryTree(leftN);
     root->right = generateRandomBinaryTree(rightN);
-
-    // Write the tree to a file
-    std::ofstream file("binary_tree.txt");
+    ofstream file("binary_tree.txt");
     if (!file.is_open()) {
-        std::cerr << "Failed to open file for writing." << std::endl;
+        cerr << "Failed to open file for writing." << endl;
         return nullptr;
     }
     writeTreeToFile(root, file);
     file.close();
-
     return root;
 }
 
@@ -135,12 +129,10 @@ int main() {
     cout << "Execution time: " << duration << " milliseconds" << endl;
     printBT(root2);
     cout << endl;
-
     srand(time(0));
-    int n = 50;
+    int n = 15;
     Node* root = generateRandomBinaryTree(n);
     int count = countRightLeafNodes(root);
     cout << "Count Right Leaf Nodes: " << count << endl << endl;
     printBT(root);
 }
-
