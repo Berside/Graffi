@@ -1,4 +1,4 @@
 ﻿  graf.cpp
-C:\Users\bersi\source\repos\graf\graf\graf.cpp(87,51): warning C4267: аргумент: преобразование из "size_t" в "int"; возможна потеря данных
-C:\Users\bersi\source\repos\graf\graf\graf.cpp(125,19): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+C:\Users\bersi\source\repos\graf\graf\graf.cpp(88,51): warning C4267: аргумент: преобразование из "size_t" в "int"; возможна потеря данных
+C:\Users\bersi\source\repos\graf\graf\graf.cpp(132,23): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
   graf.vcxproj -> C:\Users\bersi\source\repos\graf\x64\Debug\graf.exe
