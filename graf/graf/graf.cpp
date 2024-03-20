@@ -5,6 +5,7 @@
 #include <ctime>
 #include <chrono>
 using namespace std;
+
 struct Node {
     string data;
     Node* left;
@@ -108,42 +109,47 @@ void generateRandomBinaryTree(Node*& node, int n) {
 
 int main() {
     setlocale(LC_ALL, "Russian");
-    Node* root = readTreeFromFile("Module.txt");
-    if (root != nullptr) {
-        cout << "Выберите способ запуск программы:" << endl;
-        cout << "Если вы хотите построить дерево используя входные данные. Напишите: 1" << endl;
-        cout << "Если вы хотите построить дерево используя случайную генерацию. Напишите: 2" << endl;
-        cout << "Если вы не хотите строить бинарное дерево. Напишите любое число" << endl;
-        cout << endl;
-        int k;
-        cin >> k;
-        if (k == 1) {
-            auto start1 = chrono::high_resolution_clock::now();
-            Node* root = readTreeFromFile("Module.txt");
+    cout << "Выберите способ запуск программы:" << endl;
+    cout << "Если вы хотите построить дерево используя входные данные. Напишите: 1" << endl;
+    cout << "Если вы хотите построить дерево используя случайную генерацию. Напишите: 2" << endl;
+    cout << "Если вы не хотите строить бинарное дерево. Напишите любое число" << endl;
+    cout << endl;
+    int k;
+    cin >> k;
+    if (k == 1) {
+        auto start1 = chrono::high_resolution_clock::now();
+        Node* root = readTreeFromFile("Module.txt");
+        if (root != nullptr) {
             removeNodeAndDescendants(root);
             printBT(root);
             cout << endl;
+            auto start2 = chrono::high_resolution_clock::now();
             cout << "Количество правых листовых узлов: " << countRightLeafNodes(root, k) << endl;
+            auto end2 = chrono::high_resolution_clock::now();
             auto end1 = chrono::high_resolution_clock::now();
             auto duration1 = chrono::duration_cast<chrono::milliseconds>(end1 - start1).count();
+            auto duration2 = chrono::duration_cast<chrono::milliseconds>(end2 - start2).count();
+            cout << "Время выполения алгоритма: " << duration2 << " milliseconds" << endl;
             cout << "Время выполения программы: " << duration1 << " milliseconds" << endl;
         }
-        if (k == 2) {
-            srand(time(0));
-            Node* root1 = nullptr;
-            int n;
-            cout << "Напиши количество узлов для генерации бинарного дерева:" << endl;
-            cin >> n;
-            auto start = chrono::high_resolution_clock::now();
-            generateRandomBinaryTree(root1, n);
-            removeNodeAndDescendants(root1);
-            cout << endl;
-            cout << "Количество правых листовых узлов: " << countRightLeafNodes(root1, k) << endl;
-            auto end = chrono::high_resolution_clock::now();
-            auto duration = chrono::duration_cast<chrono::milliseconds>(end - start).count();
-            cout << "Время выполения программы: " << duration << " milliseconds" << endl;
-        }
-        else cout << "Для построения бинарного дерева нужно было использовать команду 1 или 2" << endl;
+    }
+    if (k == 2) {
+        srand(time(0));
+        Node* root1 = nullptr;
+        int n;
+        cout << "Напиши количество узлов для генерации бинарного дерева:" << endl;
+        cin >> n;
+        auto start = chrono::high_resolution_clock::now();
+        generateRandomBinaryTree(root1, n);
+        cout << endl;
+        auto start2 = chrono::high_resolution_clock::now();
+        cout << "Количество правых листовых узлов: " << countRightLeafNodes(root1, k) << endl;
+        auto end2 = chrono::high_resolution_clock::now();
+        auto end = chrono::high_resolution_clock::now();
+        auto duration2 = chrono::duration_cast<chrono::milliseconds>(end2 - start2).count();
+        cout << "Время выполения алгоритма: " << duration2 << " milliseconds" << endl;
+        auto duration = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+        cout << "Время выполения программы: " << duration << " milliseconds" << endl;
     }
     return 0;
 }
