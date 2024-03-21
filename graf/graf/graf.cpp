@@ -3,20 +3,25 @@
 #include <string>
 #include <fstream>
 #include <ctime>
+#include <memory>
 #include <chrono>
 using namespace std;
 
+// Структура Node представляет собой узел в бинарном дереве, где каждый узел содержит данные типа string и указатели на левого и правого потомка, которые также являются узлами.
 struct Node {
     string data;
-    Node* left;
-    Node* right;
+    unique_ptr<Node> left;
+    unique_ptr<Node> right;
     Node() : data(""), left(nullptr), right(nullptr) {}
     Node(const string& data) : data(data), left(nullptr), right(nullptr) {}
 };
 
-Node* newNode(const string& data) {
-    return new Node(data);
+// Создает новый узел с заданными данными.
+unique_ptr<Node> newNode(const string& data) {
+    return std::make_unique<Node>(data);
 }
+
+// Находит индекс закрывающей скобки, соответствующей открывающей скобке, начиная с позиции si.
 int findIndex(const string& str, int si, int ei) {
     stack<char> s;
     for (int i = si; i <= ei; i++) {
@@ -35,10 +40,11 @@ int findIndex(const string& str, int si, int ei) {
     return -1;
 }
 
-int countRightLeafNodes(Node* node, int k) {
-    if (node == nullptr) return 0;
+// Подсчитывает количество правых листовых узлов в дереве.
+int countRightLeafNodes(unique_ptr<Node>& node, int k) {
+    if (!node) return 0;
     int count = 0;
-    if (node->right != nullptr && node->right->left == nullptr && node->right->right == nullptr) {
+    if (node->right && !node->right->left && !node->right->right) {
         count += 1;
         if (k == 1) {
             cout << "Найден правый листовой узел: " << node->right->data << endl;
@@ -47,15 +53,15 @@ int countRightLeafNodes(Node* node, int k) {
     return count + countRightLeafNodes(node->left, k) + countRightLeafNodes(node->right, k);
 }
 
-
-Node* treeFromString(const std::string& str, int si, int ei) {
+// Создает дерево из строки, представляющей его структуру.
+unique_ptr<Node> treeFromString(const string& str, int si, int ei) {
     if (si > ei) return nullptr;
     int num = 0;
     while (si <= ei && str[si] >= '0' && str[si] <= '9') {
         num = num * 10 + (str[si] - '0');
         si++;
     }
-    Node* root = newNode(std::to_string(num));
+    unique_ptr<Node> root = newNode(to_string(num));
     int index = -1;
     if (si <= ei && str[si] == '(') {
         index = findIndex(str, si, ei);
@@ -67,17 +73,18 @@ Node* treeFromString(const std::string& str, int si, int ei) {
     return root;
 }
 
-void printBT(const string& prefix, Node* node, bool isLeft) {
-    if (node != nullptr) {
+// Выводит дерево в виде текстового представления.
+void printBT(const string& prefix, unique_ptr<Node>& node, bool isLeft) {
+    if (node) {
         cout << prefix << (isLeft ? "|--" : "|__") << node->data << endl;
         printBT(prefix + (isLeft ? "|   " : "    "), node->right, true);
         printBT(prefix + (isLeft ? "|   " : "    "), node->left, false);
     }
 }
-void printBT(Node* node) {
-    printBT("", node, false);
-}
-Node* readTreeFromFile(const std::string& filename) {
+
+
+// Читает дерево из файла, представленного строкой.
+unique_ptr<Node> readTreeFromFile(const std::string& filename) {
     ifstream file(filename);
     if (!file) {
         cerr << "Unable to open file " << filename << endl;
@@ -89,17 +96,18 @@ Node* readTreeFromFile(const std::string& filename) {
     return treeFromString(str, 0, str.length() - 1);
 }
 
-void removeNodeAndDescendants(Node*& node) {
-    if (node == nullptr) return;
+// Удаляет узел и все его потомки.
+void removeNodeAndDescendants(unique_ptr<Node>& node) {
+    if (!node) return;
     removeNodeAndDescendants(node->left);
     removeNodeAndDescendants(node->right);
     if (node->data == "0") {
-        delete node;
-        node = nullptr;
+        node.reset();
     }
 }
 
-void generateRandomBinaryTree(Node*& node, int n) {
+// Генерирует случайное бинарное дерево с заданным количеством узлов.
+void generateRandomBinaryTree(unique_ptr<Node>& node, int n) {
     if (n == 0) return;
     int leftN = rand() % n;
     node = newNode("1");
@@ -118,10 +126,10 @@ int main() {
     cin >> k;
     if (k == 1) {
         auto start1 = chrono::high_resolution_clock::now();
-        Node* root = readTreeFromFile("Module.txt");
-        if (root != nullptr) {
+        unique_ptr<Node> root = readTreeFromFile("Module.txt");
+        if (root) {
             removeNodeAndDescendants(root);
-            printBT(root);
+            printBT("", root, false);
             cout << endl;
             auto start2 = chrono::high_resolution_clock::now();
             cout << "Количество правых листовых узлов: " << countRightLeafNodes(root, k) << endl;
@@ -135,7 +143,7 @@ int main() {
     }
     if (k == 2) {
         srand(time(0));
-        Node* root1 = nullptr;
+        unique_ptr<Node> root1 = nullptr;
         int n;
         cout << "Напиши количество узлов для генерации бинарного дерева:" << endl;
         cin >> n;
